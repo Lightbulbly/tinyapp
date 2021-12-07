@@ -78,6 +78,16 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect(`/urls`);
 });
 
+app.post("/urls/:shortURL/update", (req, res) => {
+  let id = req.params.shortURL;
+  // console.log(id);
+  // console.log(`req: `,req.body.updatedURL);
+  // console.log(`res: `,res.body);
+  urlDatabase[id] = req.body.updatedURL;
+  console.log(urlDatabase[id]);
+  res.redirect(`/urls/${id}`);
+});
+
 // app.get("/set", (req, res) => {
 //   const a = 1;
 //   res.send(`a = ${a}`);
