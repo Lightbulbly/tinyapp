@@ -140,6 +140,23 @@ app.post("/logout", (req, res) => {
 });
 
 
+//route to register page
+app.get('/register', (req, res) => {
+  res.render('register');
+});
+
+//post register
+// app.post("/register", (req, res) => {
+//   const email = req.body.email;
+//   const password = req.body.password;
+//   let templateVars = {
+//     email,
+//     password
+//   };
+//   console.log(templateVars);
+//   res.render("register", templateVars);
+// });
+
 // app.get("/set", (req, res) => {
 //   const a = 1;
 //   res.send(`a = ${a}`);
