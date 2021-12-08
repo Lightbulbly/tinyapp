@@ -9,16 +9,18 @@
         <a class="nav-item nav-link" href="/urls">My URLs</a>
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
-           <form id="login" method="POST" action="/login">
-        <input id="username" type="text" name="username" value="enter username here"></input>
-        <button type="submit" form="login">Sign in</button></form>
-            <% if(email){ %>
-        <h5>Logged in as: <%=email%> </h5>
-        <form id="logout" method="POST" action="/logout"><button type="submit" form="logout">Log out</button></form>
-              <% } else{ %>  
-                <h5>browsing as guest</h5>
-     <% } %>
+           
+ 
+
    
-    </div>
+    </div> 
+        <!-- display a "Register" link (pointing to the registration page) and a "Login" link (pointing to the login page) for users that are not logged in. If a user is logged in, then the header should display a logout button. -->
+        
+       <% if(!loggedIn){ %>
+        <a class="nav-item nav-link" href="/login">Login</a>
+        <a class="nav-item nav-link" href="/register">Register</a>
+      <% } else { %>  
+        <a class="nav-item nav-link" href="/logout">Logout</a>
+     <% } %>
   </nav>
 </header>

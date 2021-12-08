@@ -191,6 +191,13 @@ app.post("/register", (req, res) => {
   console.log(users);
 });
 
+
+//route to register page
+app.get('/login', (req, res) => {
+
+  res.render('login');
+});
+
 // app.get("/set", (req, res) => {
 //   const a = 1;
 //   res.send(`a = ${a}`);
