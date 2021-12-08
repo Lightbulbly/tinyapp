@@ -3,6 +3,19 @@ const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser');
 
+const users = {
+  "userRandomID": {
+    id: "userRandomID",
+    email: "user@example.com",
+    password: "purple-monkey-dinosaur"
+  },
+  "user2RandomID": {
+    id: "user2RandomID",
+    email: "user2@example.com",
+    password: "dishwasher-funk"
+  }
+};
+
 function generateRandomString() {
   const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let result = '';
@@ -145,17 +158,25 @@ app.get('/register', (req, res) => {
   res.render('register');
 });
 
-//post register
-// app.post("/register", (req, res) => {
-//   const email = req.body.email;
-//   const password = req.body.password;
-//   let templateVars = {
-//     email,
-//     password
-//   };
-//   console.log(templateVars);
-//   res.render("register", templateVars);
-// });
+// The endpoint that handles the registration form data
+app.post("/register", (req, res) => {
+  const id = generateRandomString();
+  const email = req.body.email;
+  const password = req.body.password;
+  //add a new user object to the global users object so that it includes the user's id, email and password
+
+  users[id] =
+  {
+    id,
+    email,
+    password
+  };
+  
+  //set a user_id cookie containing the user's newly generated ID
+  res.cookie("id", id);
+  // console.log(users);
+  res.redirect("/urls");
+});
 
 // app.get("/set", (req, res) => {
 //   const a = 1;
