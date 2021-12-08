@@ -165,13 +165,14 @@ app.post("/register", (req, res) => {
   }
   
   // If someone tries to register with an email that is already in the users object, send back a response with the 400 status code. Checking for an email in the users object is something we'll need to do in other routes as well. Consider creating an email lookup helper function to keep your code DRY
-  function findUserByEmail(emailAdress) {
-    for (key in users) {
-      if (users[key].email === emailAdress) {
-        return true;
+  function findUserByEmail(email) {
+    for (const userId in users) {
+      const user = users[userId];
+      if (user.email === email) {
+        return user;
       }
     }
-    return false;
+    return null;
   }
   if (findUserByEmail(email)) {
     return res.status(400).send("that email has been used to register");
