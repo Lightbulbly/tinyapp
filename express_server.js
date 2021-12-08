@@ -159,17 +159,35 @@ app.post("/register", (req, res) => {
   const password = req.body.password;
   //add a new user object to the global users object so that it includes the user's id, email and password
 
-  users[id] =
-  {
-    id,
-    email,
-    password
-  };
+  // If the e-mail or password are empty strings, send back a response with the 400 status code.
+  if (!email || !password) {
+    return res.status(400).send("email and password cannot be blank");
+  }
   
-  //set a user_id cookie containing the user's newly generated ID
-  res.cookie("id", id);
-  // console.log(users);
-  res.redirect("/urls");
+  // If someone tries to register with an email that is already in the users object, send back a response with the 400 status code. Checking for an email in the users object is something we'll need to do in other routes as well. Consider creating an email lookup helper function to keep your code DRY
+  function findUserByEmail(emailAdress) {
+    for (key in users) {
+      if (users[key].email === emailAdress) {
+        return true;
+      }
+    }
+    return false;
+  }
+  if (findUserByEmail(email)) {
+    return res.status(400).send("that email has been used to register");
+  } else {
+    users[id] =
+    {
+      id,
+      email,
+      password
+    };
+    //set a user_id cookie containing the user's newly generated ID
+    res.cookie("id", id);
+    // console.log(users);
+    res.redirect("/urls");
+  }
+  console.log(users);
 });
 
 // app.get("/set", (req, res) => {
