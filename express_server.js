@@ -31,7 +31,6 @@ app.set("view engine", "ejs");//This tells the Express app to use EJS as its tem
 
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
-
 app.use(cookieParser());
 
 const urlDatabase = {
@@ -39,36 +38,29 @@ const urlDatabase = {
   "9sm5xK": "http://www.google.com"
 };
 
-app.get("/", (req, res) => {
-  res.send("Hello!");
-});
-
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
 
-app.get("/urls.json", (req, res) => {
-  res.json(urlDatabase);
-});
-
-app.get("/hello", (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+app.get("/", (req, res) => {
+  res.send("Hello!");
 });
 
 app.get("/urls", (req, res) => {
-  // const templateVars = { greeting: 'Hello World!' };
-  // res.render("urls_index", templateVars);
-  
-  // const username = req.headers.cookie.split("=")[1];
+  let id = req.cookies.id;
+  let username = users[id].username;
+  let email = users[id].email;
 
-  let username = req.cookies.username;
+
   // console.log('Cookies: ', req.cookies.username);
+  console.log("id:", id);
+  console.log("username:", username);
+  console.log("email:", email);
 
-  // console.log(username);
-  // res.cookie("username", username);
   const templateVars = {
-    username: username,
-    urls: urlDatabase
+    username,
+    urls: urlDatabase,
+    email
   };
  
 
@@ -80,9 +72,10 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   
-  let username = req.cookies.username;
+  let id = req.cookies.id;
 
   const templateVars = {
+    id: id,
     username: username,
     urls: urlDatabase
   };
@@ -93,17 +86,18 @@ app.get("/urls/new", (req, res) => {
 
 });
 
-app.get("/urls/:shortURL", (req, res) => {
+// app.get("/urls/:shortURL", (req, res) => {
 
-  let username = req.cookies.username;
+//   let username = req.cookies.username;
 
-  const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
-    username: username
-  };
-  res.render("urls_show", templateVars);
-});
+//   const templateVars = {
+//     id:id
+//     shortURL: req.params.shortURL,
+//     longURL: urlDatabase[req.params.shortURL],
+//     username: username,
+//   };
+//   res.render("urls_show", templateVars);
+// });
 
 app.post("/urls", (req, res) => {
   // console.log(req.body);  // Log the POST request body to the console
@@ -148,7 +142,7 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("username");
+  res.clearCookie("id");
   res.redirect(`/urls`);
 });
 
