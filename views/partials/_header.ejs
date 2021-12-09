@@ -15,12 +15,20 @@
    
     </div> 
         <!-- display a "Register" link (pointing to the registration page) and a "Login" link (pointing to the login page) for users that are not logged in. If a user is logged in, then the header should display a logout button. -->
-        
-       <% if(!a){ %>
+        <div class="navbar-nav">
+       <% if(!user_id){ %>
         <a class="nav-item nav-link" href="/login">Login</a>
         <a class="nav-item nav-link" href="/register">Register</a>
       <% } else { %>  
-        <a class="nav-item nav-link" href="/logout">Logout</a>
+
+        <p>Logged in as <%= email%></p> 
+        <form class="nav-item nav-link" method="POST" action="/logout">
+          <input type="hidden" name="name" value="value" /> 
+          <a onclick="this.parentNode.submit();">Logout</a>
+        </form>
+
      <% } %>
+      </div>
+
   </nav>
 </header>
