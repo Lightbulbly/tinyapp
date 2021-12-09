@@ -27,6 +27,16 @@ function generateRandomString() {
   return result;
 }
 
+function findUserByEmail(email) {
+  for (const userId in users) {
+    const user = users[userId];
+    if (user.email === email) {
+      return user;
+    }
+  }
+  return null;
+}
+
 app.set("view engine", "ejs");//This tells the Express app to use EJS as its templating engine.
 
 const bodyParser = require("body-parser");
@@ -48,21 +58,24 @@ app.get("/", (req, res) => {
 
 app.get("/urls", (req, res) => {
   let id = req.cookies.id;
-  let username = users[id].username;
-  let email = users[id].email;
-
-
-  // console.log('Cookies: ', req.cookies.username);
-  console.log("id:", id);
-  console.log("username:", username);
-  console.log("email:", email);
-
+  console.log("here",id);
+  let username;
+  let email;
+  if (id) {
+    username = users[id].username;
+    email = users[id].email;
+    // console.log('Cookies: ', req.cookies.username);
+    // console.log("id:", id);
+    // console.log("username:", username);
+    // console.log("email:", email);
+    
+  }
   const templateVars = {
-    username,
-    urls: urlDatabase,
-    email
+    username: username,
+    email: email,
+    urls: urlDatabase
+
   };
- 
 
   res.render("urls_index", templateVars);
 
@@ -110,8 +123,8 @@ app.post("/urls", (req, res) => {
 });
 
 app.get("/u/:shortURL", (req, res) => {
-  console.log(req.params.shortURL);
-  console.log(urlDatabase[req.params.shortURL]);
+  // console.log(req.params.shortURL);
+  // console.log(urlDatabase[req.params.shortURL]);
   res.redirect(urlDatabase[req.params.shortURL]);
 });
 
@@ -132,13 +145,34 @@ app.post("/urls/:shortURL/update", (req, res) => {
   res.redirect(`/urls/${id}`);
 });
 
+//the POST /login endpoint
 app.post("/login", (req, res) => {
-  // let id = req.params.shortURL;
-  // console.log(id);
-  // console.log(`req:`,req.body.username);
-  const username = req.body.username;
-  res.cookie("username", username);
-  res.redirect(`/urls`);
+//   If a user with that e-mail cannot be found, return a response with a 403 status code.
+// If a user with that e-mail address is located, compare the password given in the form with the existing user's password. If it does not match, return a response with a 403 status code.
+// If both checks pass, set the user_id cookie with the matching user's random ID, then redirect to /urls.
+  let email = req.body.email;
+  let password = req.body.password;
+  let id;
+  console.log("password",password);
+  console.log("password:", password);
+  // && password === users[id].password
+  if (!findUserByEmail(email)) {
+    return res.status(403).send("that email is not in our file");
+  } else if (findUserByEmail(email).password === password) {
+    console.log(findUserByEmail(email).id);
+    id = findUserByEmail(email).id;
+    //set a user_id cookie containing the user's newly generated ID
+    res.cookie("id", id);
+    // console.log(users);
+    res.redirect("/urls");
+  } else {
+    return res.status(403).send("wrong password");
+  }
+  // console.log(users);
+
+  // const username = req.body;
+  // res.cookie("username", username);
+  // res.redirect(`/urls`);
 });
 
 app.post("/logout", (req, res) => {
@@ -165,15 +199,7 @@ app.post("/register", (req, res) => {
   }
   
   // If someone tries to register with an email that is already in the users object, send back a response with the 400 status code. Checking for an email in the users object is something we'll need to do in other routes as well. Consider creating an email lookup helper function to keep your code DRY
-  function findUserByEmail(email) {
-    for (const userId in users) {
-      const user = users[userId];
-      if (user.email === email) {
-        return user;
-      }
-    }
-    return null;
-  }
+
   if (findUserByEmail(email)) {
     return res.status(400).send("that email has been used to register");
   } else {
@@ -188,11 +214,11 @@ app.post("/register", (req, res) => {
     // console.log(users);
     res.redirect("/urls");
   }
-  console.log(users);
+  // console.log(users);
 });
 
 
-//route to register page
+//route to login page
 app.get('/login', (req, res) => {
 
   res.render('login');

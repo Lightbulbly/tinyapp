@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
   <title>Login</title>
 </head>
-<%- include('partials/_header', {loggedIn: false}); %>
+<%- include('partials/_header', {a:"a"}); %>
 
 <body>
   <main style="margin: 1em;">
@@ -18,7 +18,7 @@
       <input id="email" type="text" name="email" placeholder="enter email here"></input>
       </br>
       <label>password</label>
-      <input id="username" type="text" name="password" placeholder="enter password here"></input>
+      <input id="password" type="text" name="password" placeholder="enter password here"></input>
       <button type="submit" form="login">Sign in</button></form>
    
    </main>
