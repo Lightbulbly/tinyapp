@@ -98,7 +98,9 @@ app.get("/urls", (req, res) => {
 app.get("/urls/new", (req, res) => {
   
   const { user_id, email } = req.cookies;
-
+  if (!user_id) {
+    res.redirect("/login");
+  }
   const templateVars = {
     user_id,
     urls: urlDatabase,
@@ -107,6 +109,8 @@ app.get("/urls/new", (req, res) => {
   
   res.render("urls_new", templateVars);
 });
+
+
 
 app.get("/urls/:shortURL", (req, res) => {
 
@@ -122,6 +126,12 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
 app.post("/urls", (req, res) => {
+  const { user_id, email } = req.cookies;
+  console.log("userid in app.post urls", user_id);
+  if (!user_id) {
+    res.send("Please sign in the add shorten URLS");
+    return;
+  }
   // console.log(req.body);  // Log the POST request body to the console
   let shortURL = generateRandomString();
   // console.log(shortURL);
