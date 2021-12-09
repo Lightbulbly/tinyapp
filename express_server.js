@@ -189,6 +189,11 @@ app.post("/logout", (req, res) => {
 
 //Route to register page
 app.get('/register', (req, res) => {
+  let user_id = req.cookies.user_id;
+  if (user_id) {
+    res.redirect("/urls");
+  }
+  
   res.render('register');
 });
 
@@ -228,7 +233,13 @@ app.post("/register", (req, res) => {
 
 //route to login page
 app.get('/login', (req, res) => {
+
+
+
   let user_id = req.cookies.user_id;
+  if (user_id) {
+    res.redirect("/urls");
+  }
   let email;
   if (user_id) {
     email = users[user_id].email;
