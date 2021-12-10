@@ -1,11 +1,23 @@
 //helper function to get user's URLs out of a urlDatabase
+
+// const urlDatabase = {
+//   b6UTxQ: {
+//     longURL: "https://www.tsn.ca",
+//     userID: "aJ48lW"
+//   },
+//   i3BoGr: {
+//     longURL: "https://www.google.ca",
+//     userID: "aJ48lW"
+//   }
+// };
+
 function showShortURLsOfUser(userID, urlDatabase) {
   let result = {};
-  for (const userRandomID in urlDatabase) {
-    console.log(urlDatabase[userRandomID].userID);
-    if (urlDatabase[userRandomID].userID === userID) {
-      console.log("hey");
-      result[userRandomID] = urlDatabase[userRandomID];
+  for (const key in urlDatabase) {
+    console.log(urlDatabase[key].userID);
+    if (urlDatabase[key].userID === userID) {
+      // console.log("hey");
+      result[key] = urlDatabase[key];
     }
   }
   return result;
