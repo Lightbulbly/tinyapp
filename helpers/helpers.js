@@ -31,7 +31,7 @@ function generateRandomString() {
 }
 
 //find and return a user in the users object
-function findUserByEmail(email, userDB) {
+function getUserByEmail(email, userDB) {
   for (const userId in userDB) {
     const user = userDB[userId];
     if (user.email === email) {
@@ -39,7 +39,7 @@ function findUserByEmail(email, userDB) {
       return user;
     }
   }
-  return null;
+  return undefined;
 }
 
 // const urlDatabase = {
@@ -58,4 +58,4 @@ function findUserByEmail(email, userDB) {
 // };
 // console.log(showShortURLsOfUser("aJ48lW",urlDatabase));
 // console.log(showShortURLsOfUser("aJ48lN",urlDatabase));
-module.exports = {showShortURLsOfUser,generateRandomString, findUserByEmail, authenticateUser};
+module.exports = {showShortURLsOfUser,generateRandomString, getUserByEmail, authenticateUser};

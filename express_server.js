@@ -9,7 +9,7 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser');
-const {showShortURLsOfUser,generateRandomString, findUserByEmail, authenticateUser} = require("./helpers/userHelpers");
+const {showShortURLsOfUser,generateRandomString, getUserByEmail, authenticateUser} = require("./helpers/helpers");
 
 //users can be accessed using the following
 //id: users[userID].id
@@ -194,7 +194,7 @@ app.post("/login", (req, res) => {
 // If both checks pass, set the userID cookie with the matching user's random ID, then redirect to /urls.
   let email = req.body.email;
   let password = req.body.password;
-  const user = findUserByEmail(email,users);
+  const user = getUserByEmail(email,users);
   // console.log("email:", email);
   // console.log("password:", password);
   if (user === null) {
@@ -204,8 +204,8 @@ app.post("/login", (req, res) => {
     return res.status(403).send("wrong password");
   }
 
-  // console.log("findUserByEmail(email,users).password:",findUserByEmail(email,users).password);
-  // console.log("findUserByEmail(email,users).id",findUserByEmail(email,users).id);
+  // console.log("getUserByEmail(email,users).password:",getUserByEmail(email,users).password);
+  // console.log("getUserByEmail(email,users).id",getUserByEmail(email,users).id);
   //set a user_id cookie containing the user's newly generated ID
   res.cookie("user_id", user.id);
   // console.log(users);
@@ -238,7 +238,7 @@ app.post("/register", (req, res) => {
     return res.status(400).send("email and password cannot be blank");
   }
   // If someone tries to register with an email that is already in the users object, send back a response with the 400 status code. Checking for an email in the users object is something we'll need to do in other routes as well. Consider creating an email lookup helper function to keep your code DRY
-  let user = findUserByEmail(email,users);
+  let user = getUserByEmail(email,users);
   console.log("check here",user);
   if (user) {
     return res.status(400).send("that email has been used to register");
