@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.2.1/css/bootstrap.min.css" integrity="sha384-GJzZqFGwb1QTTN6wy59ffF1BuGJpLSa9DkKMp0DgiMDm4iYMj70gZWKYbI706tWS" crossorigin="anonymous">
   <title>TinyApp</title>
 </head>
-<%- include('partials/_header', user_id); %>
+<%- include('partials/_header', id); %>
 
 <body>
   <main style="margin: 1em;">
@@ -23,12 +23,10 @@
         </tr>
       </thead>
       <tbody>
-        <h1> how to access cookie user_id here?  </h1>
-
         <% for(let url in urls) { %>
           <tr>
                         <td><%= url %></td>
-<td><%= urls[url] %></td>
+<td><%= urls[url].longURL %></td>
             <td>
             <form id="form_edit" method="POST" action="/urls/<%=url%>/update">
             <button type="submit" form="form_edit">Edit  

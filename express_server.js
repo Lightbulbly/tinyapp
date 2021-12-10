@@ -9,51 +9,50 @@ const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser');
+const {showShortURLsOfUser,generateRandomString, findUserByEmail, authenticateUser} = require("./helpers/userHelpers");
+
+//users can be accessed using the following
+//id: users[userID].id
+//email: users[userID].email
+//password: users[userID].password
 
 const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "abc"
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "dishwasher-funk"
+    password: "abc"
   }
 };
 
-function generateRandomString() {
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  let result = '';
-  const charactersLength = characters.length;
-  for (let i = 0; i < 6; i++) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength));
+const urlDatabase = {
+  b6UTxQ: {
+    longURL: "https://www.tsn.ca",
+    userID: "aJ48lW"
+  },
+  i3BoGr: {
+    longURL: "https://www.google.ca",
+    userID: "aJ48lW"
   }
-  return result;
-}
+};
 
-function findUserByEmail(email) {
-  for (const userId in users) {
-    const user = users[userId];
-    if (user.email === email) {
-      console.log("user returned by findUserByEmail", user);
-      return user;
-    }
-  }
-  return null;
-}
+//This tells the Express app to use EJS as its templating engine.
+app.set("view engine", "ejs");
 
-app.set("view engine", "ejs"); //This tells the Express app to use EJS as its templating engine.
-
+//use cookieParser
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(cookieParser());
 
-const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
-};
+//old type of database for ref
+// const urlDatabase = {
+//   "b2xVn2": "http://www.lighthouselabs.ca",
+//   "9sm5xK": "http://www.google.com"
+// };
 
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
@@ -63,88 +62,110 @@ app.get("/", (req, res) => {
   res.send("Hello!");
 });
 
+//user click on TinyApp icon or My URLS leads here
 app.get("/urls", (req, res) => {
-
-  let user_id = req.cookies.user_id;
-  console.log("req.cookies.user_id in app.get('/urls')", user_id);
-  console.log("req.cookies in app.get('/urls')",req.cookies);
-  console.log("trouble here",users[user_id]);
-
-  // let username;
-  let email;
-  if (user_id) {
-    // username = users[id].username;
-    email = users[user_id].email;
-    // console.log('Cookies: ', req.cookies.username);
-    // console.log("id:", id);
-    // console.log("username:", username);
-    // console.log("email:", email);
-    
+  // console.log("get request /urls has cookie req.cookies:",req.cookies.user_id);
+  let id = req.cookies.user_id;
+  if (!id) {
+    res.redirect("/login");
   }
+  //if user is logged in, show a list of his/her URLs, if not, redirect to login
+  let email = users[id].email;
   const templateVars = {
     // username: username,
     // id: id,
     email,
-    user_id,
+    id,
     urls: urlDatabase
   };
 
   res.render("urls_index", templateVars);
-
-
-
 });
 
 app.get("/urls/new", (req, res) => {
-  
-  const { user_id, email } = req.cookies;
-  if (!user_id) {
+  // console.log("HEY",req.cookies);
+  let id = req.cookies.user_id;
+  if (!id) {
     res.redirect("/login");
   }
+  const email = users[id].email;
+  // console.log(id, email);
   const templateVars = {
-    user_id,
-    urls: urlDatabase,
+    id,
+    // urls,
     email
   };
-  
   res.render("urls_new", templateVars);
 });
 
 
 
 app.get("/urls/:shortURL", (req, res) => {
+  
+  let id = req.cookies.user_id;
+  if (!id) {
+    res.redirect("/login");
+  }
+  let email = users[id].email;
+  let shortURL = req.params.shortURL;
+  console.log("shortURL",req.params.shortURL);
+  console.log("req.params",req.params);
+  // console.log("The short URL that came with the get request req.params.shortURL:",shortURL);
+  // console.log("now", urlDatabase[shortURL]);
+  // console.log("HERE!",userID);
+  // console.log("HERE!",email);
+  // console.log(urlDatabase);
+  // console.log("shortURL[shortURL]: ",urlDatabase[shortURL]);
 
-  let user_id = req.cookies.user_id;
-  let email = users[user_id].email;
+  // console.log("here it is", Object.keys(urlDatabase).includes(shortURL));
+  let shortURLisInDatabase = Object.keys(urlDatabase).includes(shortURL);
+  if (shortURLisInDatabase) {
+    const templateVars = {
+      shortURL: shortURL,
+      longURL: urlDatabase[shortURL].longURL,
+      id: id,
+      email: email
+    };
+  }
   const templateVars = {
-    shortURL: req.params.shortURL,
-    longURL: urlDatabase[req.params.shortURL],
-    user_id: user_id,
+    shortURL: shortURL,
+    longURL: urlDatabase[shortURL].longURL,
+    id: id,
     email: email
   };
   res.render("urls_show", templateVars);
+
+
+ 
 });
 
 app.post("/urls", (req, res) => {
-  const { user_id, email } = req.cookies;
-  console.log("userid in app.post urls", user_id);
-  if (!user_id) {
+  // console.log("req.cookies", req.cookies.user_id);
+  const id  =  req.cookies.user_id;
+  if (!id) {
     res.send("Please sign in the add shorten URLS");
     return;
   }
   // console.log(req.body);  // Log the POST request body to the console
   let shortURL = generateRandomString();
-  // console.log(shortURL);
-  urlDatabase[shortURL] =  req.body.longURL;
-  console.log(urlDatabase[shortURL]);
+  // console.log("hey",shortURL);
+  // console.log("haa",req.body.longURL);
+  urlDatabase[shortURL] = {
+    longURL:req.body.longURL,
+    userID: id
+  };
+  // console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
   // res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
 
+//Anyone Can Visit Short URLs
 app.get("/u/:shortURL", (req, res) => {
-  // console.log(req.params.shortURL);
-  // console.log(urlDatabase[req.params.shortURL]);
-  res.redirect(urlDatabase[req.params.shortURL]);
+  // console.log("here it is",req.params);
+  let shortURL = req.params.shortURL;
+  console.log(shortURL);
+  console.log(urlDatabase);
+  res.redirect(urlDatabase[shortURL].longURL);
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -155,39 +176,41 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/urls/:shortURL/update", (req, res) => {
-  let id = req.params.shortURL;
-  // console.log(id);
+  let id = req.cookies.user_id;
+  const shortURL = req.params.shortURL;
+  // let id = req.params.shortURL;
+  // console.log("here", id);
   // console.log(`req: `,req.body.updatedURL);
   // console.log(`res: `,res.body);
-  urlDatabase[id] = req.body.updatedURL;
+  urlDatabase[id].longURL = req.body.updatedURL;
   // console.log(urlDatabase[id]);
-  res.redirect(`/urls/${id}`);
+  res.redirect(`/urls/${shortURL}`);
 });
 
 //the POST /login endpoint
 app.post("/login", (req, res) => {
 //   If a user with that e-mail cannot be found, return a response with a 403 status code.
 // If a user with that e-mail address is located, compare the password given in the form with the existing user's password. If it does not match, return a response with a 403 status code.
-// If both checks pass, set the user_id cookie with the matching user's random ID, then redirect to /urls.
+// If both checks pass, set the userID cookie with the matching user's random ID, then redirect to /urls.
   let email = req.body.email;
   let password = req.body.password;
-  let id;
+  const user = findUserByEmail(email,users);
   // console.log("email:", email);
   // console.log("password:", password);
-
-  if (!findUserByEmail(email)) {
-    return res.status(403).send("that email is not in our file");
-  } else if (findUserByEmail(email).password === password) {
-    console.log("findUserByEmail(email).password:",findUserByEmail(email).password);
-    console.log("findUserByEmail(email).id",findUserByEmail(email).id);
-    id = findUserByEmail(email).id;
-    //set a user_id cookie containing the user's newly generated ID
-    res.cookie("user_id", id);
-    // console.log(users);
-    res.redirect("/urls");
-  } else {
+  if (user === null) {
+    return res.status(403).send("Can not find a user with that email");
+  }
+  if (user.password !== password) {
     return res.status(403).send("wrong password");
   }
+
+  // console.log("findUserByEmail(email,users).password:",findUserByEmail(email,users).password);
+  // console.log("findUserByEmail(email,users).id",findUserByEmail(email,users).id);
+  //set a user_id cookie containing the user's newly generated ID
+  res.cookie("user_id", user.id);
+  // console.log(users);
+  res.redirect("/urls");
+  
 });
 
 app.post("/logout", (req, res) => {
@@ -199,68 +222,76 @@ app.post("/logout", (req, res) => {
 
 //Route to register page
 app.get('/register', (req, res) => {
-  let user_id = req.cookies.user_id;
-  if (user_id) {
+  let id = req.cookies.user_id;
+  if (id) {
     res.redirect("/urls");
   }
-  
   res.render('register');
 });
 
 // The endpoint that handles the registration form data
 app.post("/register", (req, res) => {
-  const user_id = generateRandomString();
-  // const email = req.body.email;
-  // const password = req.body.password;
-  const { email, password } = req.body;
-  // console.log(email, password);
-  //Add a new user object to the global users object so that it includes the user's id, email and password
-
+  
   // If the e-mail or password are empty strings, send back a response with the 400 status code.
+  const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).send("email and password cannot be blank");
   }
-  
   // If someone tries to register with an email that is already in the users object, send back a response with the 400 status code. Checking for an email in the users object is something we'll need to do in other routes as well. Consider creating an email lookup helper function to keep your code DRY
-
-  if (findUserByEmail(email)) {
+  let user = findUserByEmail(email,users);
+  console.log("check here",user);
+  if (user) {
     return res.status(400).send("that email has been used to register");
-  } else {
-    users[user_id] =
+  }
+
+  
+  // console.log(email, password);
+  //Add a new user object to the global users object so that it includes the user's id, email and password
+  const userRandomID = generateRandomString();
+  // const email = req.body.email;
+  // const password = req.body.password;
+  if (!user) {
+    // console.log(user, userRandomID);
+    users[userRandomID] =
     {
-      user_id,
+      id: userRandomID,
       email,
       password
     };
-    //set a user_id cookie containing the user's newly generated ID
-    res.cookie("user_id", user_id);
+    //set a userID cookie containing the user's newly generated ID
+    res.cookie("user_id", user.id);
     // console.log("users",users);
     res.redirect("/urls");
-  }
+  
   // console.log(users);
+  }
+  
+  
 });
 
 
 //route to login page
 app.get('/login', (req, res) => {
 
-
-
-  let user_id = req.cookies.user_id;
-  if (user_id) {
+  // console.log("get /login req.cookies",req.cookies);
+  let id = req.cookies.user_id;
+  if (id) {
     res.redirect("/urls");
   }
+
+  // console.log(users[id]);
   let email;
-  if (user_id) {
-    email = users[user_id].email;
-  }
+  // if (!userID) {
+  //   // console.log("here", userID);
+  // email = users[userID].email;
+  // }
   const templateVars = {
     email,
-    user_id,
+    id,
     urls: urlDatabase
   };
 
-  res.render('login',templateVars);
+  res.render('login', templateVars);
 });
 
 // app.get("/set", (req, res) => {
