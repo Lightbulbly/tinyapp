@@ -11,6 +11,10 @@ const PORT = 8080; // default port 8080
 const cookieParser = require('cookie-parser');
 const {showShortURLsOfUser,generateRandomString, getUserByEmail, authenticateUser} = require("./helpers/helpers");
 
+//bcryptjs
+const bcrypt = require('bcryptjs');
+
+
 //users can be accessed using the following
 //id: users[userID].id
 //email: users[userID].email
@@ -201,7 +205,10 @@ app.post("/login", (req, res) => {
   if (user === null) {
     return res.status(403).send("Can not find a user with that email");
   }
-  if (user.password !== password) {
+
+  if (!bcrypt.compareSync(password, user.password))
+  // if (user.password !== password)
+  {
     return res.status(403).send("wrong password");
   }
 
@@ -251,14 +258,17 @@ app.post("/register", (req, res) => {
   const userRandomID = generateRandomString();
   // const email = req.body.email;
   // const password = req.body.password;
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
   if (!user) {
     // console.log(user, userRandomID);
     users[userRandomID] =
     {
       id: userRandomID,
       email,
-      password
+      password:hashedPassword
     };
+    user = users[userRandomID];
     //set a userID cookie containing the user's newly generated ID
     res.cookie("user_id", user.id);
     // console.log("users",users);
