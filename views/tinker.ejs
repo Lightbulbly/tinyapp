@@ -10,4 +10,14 @@
 
 
 
+     <% if(errorMessage==="viewShortURLwithoutSigningIn"){ %>
+      <p>Please log in to view your urls</p>
+      <% } %>
+    <% if(shortURLnoExistent){ %>
+      <p>That shortURL doesn't exist</p>
+      <% } %>
+
      
+    <% if (errorMessageLoginToSeeURL){ %>
+    <%= errorMessageLoginToSeeURL %>
+    <% } %>

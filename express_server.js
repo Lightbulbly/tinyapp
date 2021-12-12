@@ -8,7 +8,17 @@
 const express = require("express");
 const app = express();
 const PORT = 8080; // default port 8080
-const cookieParser = require('cookie-parser');
+// const cookieParser = require('cookie-parser');
+const cookieSession = require('cookie-session');
+app.use(cookieSession({
+  name: 'session',
+  keys: [`alsdjf;lkajsd;lkfajsdklj`,`sadfasdfa`],
+
+  // Cookie Options
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+}));
+
+
 const {showShortURLsOfUser,generateRandomString, getUserByEmail, authenticateUser} = require("./helpers/helpers");
 
 //bcryptjs
@@ -24,12 +34,14 @@ const users = {
   "userRandomID": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "abc"
+    password: bcrypt.hashSync("abc", 10)
+    // const hashedPassword = bcrypt.hashSync(password, 10);
+
   },
   "user2RandomID": {
     id: "user2RandomID",
     email: "user2@example.com",
-    password: "abc"
+    password: bcrypt.hashSync("abc", 10)
   }
 };
 
@@ -50,7 +62,7 @@ app.set("view engine", "ejs");
 //use cookieParser
 const bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(cookieParser());
+// app.use(cookieParser());
 
 //old type of database for ref
 // const urlDatabase = {
@@ -63,15 +75,20 @@ app.listen(PORT, () => {
 });
 
 app.get("/", (req, res) => {
-  res.send("Hello!");
+  let id = req.session.user_id;
+  if (!id) {
+    res.redirect("/login");
+  }
+  res.redirect("/urls");
 });
 
 //user click on TinyApp icon or My URLS leads here
 app.get("/urls", (req, res) => {
   // console.log("get request /urls has cookie req.cookies:",req.cookies.user_id);
-  let id = req.cookies.user_id;
+  let id = req.session.user_id;
   if (!id) {
-    res.redirect("/login");
+    res.status(400).send("Please <a href=/login>log in</a> to see URLs");
+   
   }
   //if user is logged in, show a list of his/her URLs, if not, redirect to login
   let email = users[id].email;
@@ -89,7 +106,7 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   // console.log("HEY",req.cookies);
-  let id = req.cookies.user_id;
+  let id = req.session.user_id;
   if (!id) {
     res.redirect("/login");
   }
@@ -107,9 +124,9 @@ app.get("/urls/new", (req, res) => {
 
 app.get("/urls/:shortURL", (req, res) => {
   
-  let id = req.cookies.user_id;
+  let id = req.session.user_id;
   if (!id) {
-    res.redirect("/login");
+    res.status('400').send("Please <a href='/login'>log in<a> to see URLs");
   }
   let email = users[id].email;
   let shortURL = req.params.shortURL;
@@ -122,8 +139,11 @@ app.get("/urls/:shortURL", (req, res) => {
   // console.log(urlDatabase);
   // console.log("shortURL[shortURL]: ",urlDatabase[shortURL]);
 
-  // console.log("here it is", Object.keys(urlDatabase).includes(shortURL));
+  console.log("here it is", Object.keys(urlDatabase).includes(shortURL));
   let shortURLisInDatabase = Object.keys(urlDatabase).includes(shortURL);
+  console.log("keys in database:",Object.keys(urlDatabase));
+  console.log(shortURL);
+  console.log("shortURLisInDatabase:", shortURLisInDatabase);
   if (shortURLisInDatabase) {
     const templateVars = {
       shortURL: shortURL,
@@ -131,25 +151,22 @@ app.get("/urls/:shortURL", (req, res) => {
       id: id,
       email: email
     };
+    res.render("urls_show", templateVars);
+  } else {
+    res.status(400).send("That short URL doesn't exist. <a href='/urls/'>See your URLs.</a>");
+  
   }
-  const templateVars = {
-    shortURL: shortURL,
-    longURL: urlDatabase[shortURL].longURL,
-    id: id,
-    email: email
-  };
-  res.render("urls_show", templateVars);
+  
 
 
  
 });
-
+//POST /urls
 app.post("/urls", (req, res) => {
   // console.log("req.cookies", req.cookies.user_id);
-  const id  =  req.cookies.user_id;
+  const id  =  req.session.user_id;
   if (!id) {
-    res.send("Please sign in the add shorten URLS");
-    return;
+    return res.status(400).send("Log in to make shortURL");
   }
   // console.log(req.body);  // Log the POST request body to the console
   let shortURL = generateRandomString();
@@ -159,7 +176,7 @@ app.post("/urls", (req, res) => {
     longURL:req.body.longURL,
     userID: id
   };
-  // console.log(urlDatabase);
+  console.log(urlDatabase);
   res.redirect(`/urls/${shortURL}`);
   // res.send("Ok");         // Respond with 'Ok' (we will replace this)
 });
@@ -168,9 +185,19 @@ app.post("/urls", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   // console.log("here it is",req.params);
   let shortURL = req.params.shortURL;
-  console.log(shortURL);
+  let id = req.session.user_id;
+  let email = users[id].email;
+
+  console.log("shortURL in u/:shortURL:",shortURL);
   console.log(urlDatabase);
+  let shortURLisInDatabase = Object.keys(urlDatabase).includes(shortURL);
+
+  if (!shortURLisInDatabase) {
+    res.status(400).send("That short URL doesn't exist. <a href='/urls'>See your URLs.</a>");
+
+  }
   res.redirect(urlDatabase[shortURL].longURL);
+
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
@@ -180,14 +207,27 @@ app.post("/urls/:shortURL/delete", (req, res) => {
   res.redirect(`/urls`);
 });
 
+// app.get("/urls/:shortURL/update", (req, res) => {
+//   let id = req.session.user_id;
+//   const shortURL = req.params.shortURL;
+//   console.log("here is id from req.session.user_id", id);
+//   // console.log(`req: `,req.body.updatedURL);
+//   // console.log(`res: `,res.body);
+//   // urlDatabase[id].longURL = req.body.updatedURL;
+//   // console.log(urlDatabase[id]);
+//   res.redirect(`/urls/${shortURL}`);
+// });
+
 app.post("/urls/:shortURL/update", (req, res) => {
-  let id = req.cookies.user_id;
+
+  let id = req.session.user_id;
   const shortURL = req.params.shortURL;
   // let id = req.params.shortURL;
   // console.log("here", id);
-  // console.log(`req: `,req.body.updatedURL);
+  console.log(shortURL);
+  console.log(`req: `,req.body.updatedURL);
   // console.log(`res: `,res.body);
-  urlDatabase[id].longURL = req.body.updatedURL;
+  urlDatabase[shortURL].longURL = req.body.updatedURL;
   // console.log(urlDatabase[id]);
   res.redirect(`/urls/${shortURL}`);
 });
@@ -205,7 +245,6 @@ app.post("/login", (req, res) => {
   if (user === null) {
     return res.status(403).send("Can not find a user with that email");
   }
-
   if (!bcrypt.compareSync(password, user.password))
   // if (user.password !== password)
   {
@@ -215,22 +254,27 @@ app.post("/login", (req, res) => {
   // console.log("getUserByEmail(email,users).password:",getUserByEmail(email,users).password);
   // console.log("getUserByEmail(email,users).id",getUserByEmail(email,users).id);
   //set a user_id cookie containing the user's newly generated ID
-  res.cookie("user_id", user.id);
+  // res.cookie("user_id", user.id);
+  req.session.user_id = user.id;
+
   // console.log(users);
   res.redirect("/urls");
   
 });
 
 app.post("/logout", (req, res) => {
-  res.clearCookie("user_id");
-  console.log("Cookie cleared, redirect to /urls");
+  // res.clearCookie("user_id");
+  req.session = null;
+  // console.log("Cookie cleared, redirect to /urls");
+  console.log("Cookie session cleared, redirect to /urls");
+
   res.redirect(`/urls`);
 });
 
 
 //Route to register page
 app.get('/register', (req, res) => {
-  let id = req.cookies.user_id;
+  let id = req.session.user_id;
   if (id) {
     res.redirect("/urls");
   }
@@ -243,13 +287,14 @@ app.post("/register", (req, res) => {
   // If the e-mail or password are empty strings, send back a response with the 400 status code.
   const { email, password } = req.body;
   if (!email || !password) {
-    return res.status(400).send("email and password cannot be blank");
+    res.status(400).send("Missing email or password, please <a href='/register'>try again</a>");
+    return;
   }
   // If someone tries to register with an email that is already in the users object, send back a response with the 400 status code. Checking for an email in the users object is something we'll need to do in other routes as well. Consider creating an email lookup helper function to keep your code DRY
   let user = getUserByEmail(email,users);
-  console.log("check here",user);
+  // console.log("user:",user);
   if (user) {
-    return res.status(400).send("that email has been used to register");
+    return res.status(400).send("That email has been used to register");
   }
 
   
@@ -266,11 +311,14 @@ app.post("/register", (req, res) => {
     {
       id: userRandomID,
       email,
-      password:hashedPassword
+      password: hashedPassword
     };
     user = users[userRandomID];
     //set a userID cookie containing the user's newly generated ID
-    res.cookie("user_id", user.id);
+    // res.cookie("user_id", user.id);
+    req.session.user_id = user.id;
+
+
     // console.log("users",users);
     res.redirect("/urls");
   
@@ -285,7 +333,7 @@ app.post("/register", (req, res) => {
 app.get('/login', (req, res) => {
 
   // console.log("get /login req.cookies",req.cookies);
-  let id = req.cookies.user_id;
+  let id = req.session.user_id;
   if (id) {
     res.redirect("/urls");
   }
