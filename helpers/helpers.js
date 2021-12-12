@@ -16,7 +16,6 @@ function showShortURLsOfUser(userID, urlDatabase) {
   for (const key in urlDatabase) {
     console.log(urlDatabase[key].userID);
     if (urlDatabase[key].userID === userID) {
-      // console.log("hey");
       result[key] = urlDatabase[key];
     }
   }
@@ -51,7 +50,7 @@ function getUserByEmail(email, userDB) {
       return user;
     }
   }
-  return undefined;
+  return null;
 }
 
 // const urlDatabase = {
