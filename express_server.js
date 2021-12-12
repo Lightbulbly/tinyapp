@@ -337,21 +337,21 @@ app.get('/login', (req, res) => {
 
   // console.log("get /login req.cookies",req.cookies);
   let id = req.session.user_id;
-  if (id) {
+  let user = users[id];
+  if (user) {
     res.redirect("/urls");
   }
 
   // console.log(users[id]);
-  let email;
   // if (!userID) {
   //   // console.log("here", userID);
   // email = users[userID].email;
   // }
-  const templateVars = {
-    email,
-    id,
-    urls: urlDatabase
-  };
 
+  const templateVars = {
+    id,
+    // urls: urlDatabase
+  };
   res.render('login', templateVars);
+  
 });
