@@ -164,10 +164,10 @@ app.post("/urls", (req, res) => {
     longURL:req.body.longURL,
     userID: id
   };
-  res.status(400).send(`Please log in to create new short URLs`);
+  // res.status(400).send(`Please log in to create new short URLs`);
 
   console.log(urlDatabase);
-  // res.redirect(`/urls/${shortURL}`);
+  res.redirect(`/urls/${shortURL}`);
   
 });
 
