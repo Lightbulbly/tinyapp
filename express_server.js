@@ -62,8 +62,10 @@ app.listen(PORT, () => {
 
 app.get("/", (req, res) => {
   let id = req.session.user_id;
-  if (!id) {
+  const user = users[id];
+  if (!user) {
     res.redirect("/login");
+    return;
   }
   res.redirect("/urls");
 });
@@ -95,11 +97,13 @@ app.get("/urls", (req, res) => {
 
 app.get("/urls/new", (req, res) => {
   // console.log("Cookies:",req.cookies);
-  let id = req.session.user_id;
-  if (!id) {
+  const id = req.session.user_id;
+  const user = users[id];
+
+  if (!user) {
     res.redirect("/login");
   }
-  const email = users[id].email;
+  const email = user.email;
   // console.log(id, email);
   const templateVars = {
     id,
@@ -127,9 +131,9 @@ app.get("/urls/:shortURL", (req, res) => {
   // console.log("keys in database:",Object.keys(urlDatabase));
   // console.log("shortURL",shortURL);
   // console.log("shortURLisInDatabase:", shortURLisInDatabase);
-  if (shortURLisInDatabase) {
+  if (shortURLisInDatabase && user.id === urlDatabase[shortURL].userID) {
     let longURL =  urlDatabase[shortURL].longURL;
-    console.log("longURL:",longURL);
+    // console.log("longURL:",longURL);
     const templateVars = {
       shortURL: shortURL,
       longURL: longURL,
@@ -138,8 +142,7 @@ app.get("/urls/:shortURL", (req, res) => {
     };
     res.render("urls_show", templateVars);
   } else {
-    res.status(400).send("That short URL doesn't exist. <a href='/urls/'>See your URLs.</a>");
-
+    res.status(400).send("You don't own that short URL. <a href='/urls/'>See your URLs.</a>");
   }
   
 
@@ -161,8 +164,10 @@ app.post("/urls", (req, res) => {
     longURL:req.body.longURL,
     userID: id
   };
+  res.status(400).send(`Please log in to create new short URLs`);
+
   console.log(urlDatabase);
-  res.redirect(`/urls/${shortURL}`);
+  // res.redirect(`/urls/${shortURL}`);
   
 });
 
@@ -170,7 +175,8 @@ app.post("/urls", (req, res) => {
 app.get("/u/:shortURL", (req, res) => {
   // console.log("here it is",req.params);
   let shortURL = req.params.shortURL;
-  let id = req.session.user_id;
+  // let id = req.session.user_id;
+  
   // let email = users[id].email;
 
   // console.log("shortURL in u/:shortURL:",shortURL);
@@ -212,23 +218,29 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 // });
 
 app.post("/urls/:shortURL/update", (req, res) => {
+// app.post("/urls/:shortURL", (req, res) => {
 
   const id = req.session.user_id;
   const shortURL = req.params.shortURL;
   const user = users[id];
   if (!user) {
     res.status('400').send("Please <a href='/login'>log in<a> to update URLs");
+    return;
   }
-  let email = users[id].email;
+  let email = user.email;
+  let shortURLisInDatabase = Object.keys(urlDatabase).includes(shortURL);
+  if (shortURLisInDatabase && user.id === urlDatabase[shortURL].userID) {
 
-  // let id = req.params.shortURL;
-  // console.log("id:", id);
-  // console.log(shortURL);
-  // console.log(`req: `,req.body.updatedURL);
-  // console.log(`res: `,res.body);
-  urlDatabase[shortURL].longURL = req.body.updatedURL;
-  // console.log(urlDatabase[id]);
-  res.redirect(`/urls/${shortURL}`);
+    // let id = req.params.shortURL;
+    // console.log("id:", id);
+    // console.log(shortURL);
+    // console.log(`req: `,req.body.updatedURL);
+    // console.log(`res: `,res.body);
+    urlDatabase[shortURL].longURL = req.body.updatedURL;
+    res.redirect(`/urls`);
+  }  // console.log(urlDatabase[id]);
+  // res.redirect(`/urls/${shortURL}`);
+
 });
 
 //the POST /login endpoint
